@@ -1,10 +1,41 @@
 namespace SpriteKind {
     export const Build = SpriteKind.create()
 }
+function Make_Enemy () {
+    if (Game_Started) {
+        if (!(Buildmode)) {
+            mySprite2 = sprites.create(img`
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                . . f f f f f f f f f f f f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f 2 2 2 2 2 2 2 2 2 2 f . . 
+                . . f f f f f f f f f f f f . . 
+                . . . . . . . . . . . . . . . . 
+                . . . . . . . . . . . . . . . . 
+                `, SpriteKind.Enemy)
+            tiles.placeOnTile(mySprite2, tiles.getTileLocation(randint(0, 39), 0))
+            mySprite2.ay = 165
+            timer.after(3500, function () {
+                mySprite2.follow(mySprite, 25)
+            })
+        }
+    }
+}
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     if (Game_Started) {
-        if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
-            mySprite.vy = -175
+        if (!(Buildmode)) {
+            if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
+                mySprite.vy = -175
+            }
         }
     }
 })
@@ -100,7 +131,53 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (Game_Started) {
         if (!(Buildmode)) {
             if (statusbar.value > 0) {
-            	
+                if (direction == "r") {
+                    projectile = sprites.createProjectileFromSprite(img`
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . f f . 
+                        . . . . . . . . . . . . . f f . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        `, mySprite, 150, 0)
+                    statusbar.value += -1
+                } else if (direction == "l") {
+                    projectile = sprites.createProjectileFromSprite(img`
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . f f . . . . . . . . . . . . . 
+                        . f f . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        . . . . . . . . . . . . . . . . 
+                        `, mySprite, -150, 0)
+                    statusbar.value += -1
+                }
+                scene.cameraShake(4, 200)
+            }
+        } else if (Buildmode) {
+            if (statusbar.value > 0) {
+                tiles.setTileAt(tiles.locationOfSprite(Builder), myTiles.tile1)
+                tiles.setWallAt(tiles.locationOfSprite(Builder), true)
             }
         }
     }
@@ -197,6 +274,11 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
         }
     }
 })
+info.onLifeZero(function () {
+    if (Game_Started) {
+        game.over(false, effects.dissolve)
+    }
+})
 blockMenu.onMenuOptionSelected(function (option, index) {
     if (option == "Controls") {
         game.showLongText("LEFT and RIGHT or A and D keys to move left and right. UP or W to jump. SPACE or Z to shoot or build. Press ENTER or X to turn on and off build mode.", DialogLayout.Full)
@@ -206,9 +288,10 @@ blockMenu.onMenuOptionSelected(function (option, index) {
         textSprite.destroy(effects.disintegrate, 200)
         timer.after(550, function () {
             statusbar = statusbars.create(20, 4, StatusBarKind.Magic)
-            statusbar.setPosition(23, 97)
+            statusbar.positionDirection(CollisionDirection.Bottom)
             statusbar.value = 20
             statusbar.max = 20
+            info.setLife(5)
             Buildmode = false
             scene.setBackgroundColor(1)
             scene.setBackgroundImage(img`
@@ -393,13 +476,33 @@ blockMenu.onMenuOptionSelected(function (option, index) {
         })
     }
 })
-let direction = ""
+sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy, function (sprite, otherSprite) {
+    if (Game_Started) {
+        otherSprite.destroy()
+        sprite.destroy()
+        scene.cameraShake(4, 200)
+        statusbar.value += 2
+    }
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
+    if (Game_Started) {
+        otherSprite.destroy()
+        sprite.x += -5
+        sprite.y += -5
+        scene.cameraShake(4, 200)
+        info.changeLifeBy(-1)
+    }
+})
+let difficulty = 0
 let Skin = 0
+let projectile: Sprite = null
+let direction = ""
 let statusbar: StatusBarSprite = null
 let Map = 0
 let Builder: Sprite = null
-let Buildmode = false
 let mySprite: Sprite = null
+let mySprite2: Sprite = null
+let Buildmode = false
 let textSprite: TextSprite = null
 let Game_Started = false
 Game_Started = false
@@ -694,6 +797,25 @@ game.onUpdate(function () {
     }
 })
 game.onUpdate(function () {
+    if (info.score() > 0 && info.score() < 25) {
+        difficulty = 1
+    } else if (info.score() > 25 && info.score() < 50) {
+        difficulty = 2
+    } else if (info.score() > 50 && info.score() < 75) {
+        difficulty = 3
+    } else if (info.score() > 75 && info.score() < 100) {
+        difficulty = 4
+    } else if (info.score() > 100 && info.score() < 125) {
+        difficulty = 5
+    } else if (info.score() > 125 && info.score() < 150) {
+        difficulty = 6
+    } else if (info.score() > 150 && info.score() < 175) {
+        difficulty = 7
+    } else if (info.score() > 175 && info.score() < 200) {
+        difficulty = 8
+    }
+})
+game.onUpdate(function () {
     if (Game_Started) {
         if (!(Buildmode)) {
             if (mySprite.isHittingTile(CollisionDirection.Left)) {
@@ -719,6 +841,67 @@ game.onUpdate(function () {
     if (Game_Started) {
         if (!(Buildmode)) {
             Builder.setPosition(mySprite.x, mySprite.y)
+        }
+    }
+})
+game.onUpdateInterval(1400, function () {
+    if (Game_Started) {
+        if (difficulty == 4) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(2000, function () {
+    if (Game_Started) {
+        if (difficulty == 1) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(1000, function () {
+    if (Game_Started) {
+        info.changeScoreBy(1)
+    }
+})
+game.onUpdateInterval(1000, function () {
+    if (Game_Started) {
+        if (difficulty == 5) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(1600, function () {
+    if (Game_Started) {
+        if (difficulty == 3) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(850, function () {
+    if (Game_Started) {
+        if (difficulty == 6) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(600, function () {
+    if (Game_Started) {
+        if (difficulty == 7) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(1800, function () {
+    if (Game_Started) {
+        if (difficulty == 2) {
+            Make_Enemy()
+        }
+    }
+})
+game.onUpdateInterval(500, function () {
+    if (Game_Started) {
+        if (difficulty == 8) {
+            Make_Enemy()
         }
     }
 })
